@@ -15,11 +15,17 @@ Diagram(Dgm =D,, globalmaxdeath = None, infinitedeath=None)
 ```
 
 This class has various global variables such as 
+
 {diagram} = D
+
 {Birth} = All the Birth values of D
+
 {Death} = All the Death values of D
+
 {globalmaxdeath} = If one is considering multiple samples of a space where a largest possible death value, that value should be input here. For example, images have a global max death of 255.
+
 {infinitedeath} = The value signifying an infinite death. For most softwares, this value is -1. Thus if left unset, any negative death value is assumed to be infinite.
+
 {shape} = D.shape.
   
  
