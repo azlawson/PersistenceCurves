@@ -7,10 +7,19 @@ Computational Topology is a field of mathematics concerned with examining and ut
 ## The Package
 
 ### The Diagram Class
-The sole class of this package is Diagram. This package assumes the user has already calculated the persistence diagram(s) of interest. Essentially a diagram is an array or data frame of shape (x,2). Suppose D is a diagram. The code below transforms D to the Diagram class.
+The sole class of this package is <Diagram>. This package assumes the user has already calculated the persistence diagram(s) of interest. Diagrams are collection of ordered pairs (b,d) (birth and death respectively) where d>b and d can take the value infinity. Essentially, a diagram is an array or data frame of shape (x,2). Suppose D is a diagram. The code below transforms D to the Diagram class. 
 
 ```python
-import Diagram
-Diagram(D)
+from PersistenceCurves import Diagram
+Diagram(Dgm =D,, globalmaxdeath = None, infinitedeath=None)
 ```
 
+This class has various global variables such as 
+<diagram> = D
+<Birth> = All the Birth values of D
+<Death> = All the Death values of D
+<globalmaxdeath> = If one is considering multiple samples of a space where a largest possible death value, that value should be input here. For example, images have a global max death of 255.
+<infinitedeath> = The value signifying an infinite death. For most softwares, this value is -1. Thus if left unset, any negative death value is assumed to be infinite.
+<shape> = D.shape.
+  
+ 
