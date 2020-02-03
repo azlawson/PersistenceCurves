@@ -13,6 +13,7 @@ class Diagram:
         #@param Dgm: A persistence Diagram, i.e. an n by 2 array
         #@param globalmaxdeath: The maximum possible death value for the persistence process, e.g. in the case of 8-bit images, the max death is 255. Leave as None if there is no such value
         #@param infinitedeath: The value that represents an infinite death value, e.g. for Perseus that value is -1, which is default for this package
+        
         self.Birth = np.array(Dgm)[:,0]
         self.Death = np.array(Dgm)[:,1]
         self.globalmaxdeath = globalmaxdeath
@@ -24,28 +25,16 @@ class Diagram:
         #Produces a plot of the Diagram with infinite death marked with red diamonds
         Birth = self.Birth
         Death = self.Death
-        if self.infinitedeath ==-1:
-            if self.globalmaxdeath is None:
-                finBirth = Birth[Death>=0]
-                finDeath = Death[Death>=0]
-                infBirth = Birth[Death<0]
-                infDeath =Death[Death<0] + np.max(self.Death) + 2
-            else:
-                finBirth = Birth[Death>=0]
-                finDeath = Death[Death>=0]
-                infBirth = Birth[Death<0]
-                infDeath = Death[Death<0] +2 + self.globalmaxdeath
+        if self.globalmaxdeath is None:
+            finBirth = Birth[Death!=self.infinitedeath]
+            finDeath = Death[Death!=self.infinitedeath]
+            infBirth =Birth[Death==self.infinitedeath]
+            infDeath =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
         else:
-            if self.globalmaxdeath is None:
-                finBirth = Birth[Death!=self.infinitedeath]
-                finDeath = Death[Death!=self.infinitedeath]
-                infBirth =Birth[Death==self.infinitedeath]
-                infDeath =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
-            else:
-                finBirth = Birth[Death!=self.infinitedeath]
-                finDeath = Death[Death!=self.infinitedeath]
-                infBirth =Birth[Death==self.infinitedeath]
-                infDeath = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
+            finBirth = Birth[Death!=self.infinitedeath]
+            finDeath = Death[Death!=self.infinitedeath]
+            infBirth =Birth[Death==self.infinitedeath]
+            infDeath = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
         plt.scatter(finBirth, finDeath, s=ptsize)
         plt.scatter(infBirth, infDeath, marker = "D", c='red')
         plt.plot([np.min(self.Birth) - 1, np.max(self.Death) + 1], [np.min(self.Birth) - 1, np.max(self.Death) + 1], c="green")
@@ -165,7 +154,7 @@ class Diagram:
             if len(res) !=0:
                 tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
         curve = tmp.sum(axis = 0)
-        return curve
+        return curve/2
     def multilifecurve(self, meshstart, meshstop, num_in_mesh):
         #Produces the multiplicative life curve of the diagram
         #@param meshstart: The lowest value at which to begin the curve
@@ -194,89 +183,50 @@ class Diagram:
                 tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
         curve = tmp.sum(axis = 0)
         return curve
+    def stabilizedlifecurve(self, meshstart, meshstop, num_in_mesh):
+        #Produces the life curve of the diagram
+        #@param meshstart: The lowest value at which to begin the curve
+        #@param meshstop: the highest value at which to stop the curve
+        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        curve = self.lifecurve(meshstart,meshstop,num_in_mesh)/self.totallife()
+        return curve
+    def stabilizedmidlifecurve(self, meshstart, meshstop, num_in_mesh):
+        #Produces the midlife curve of the diagram
+        #@param meshstart: The lowest value at which to begin the curve
+        #@param meshstop: the highest value at which to stop the curve
+        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        curve = self.midlifecurve(meshstart,meshstop,num_in_mesh)/self.totalmidlife()
+        return curve
+    def stabilizedmultilifecurve(self, meshstart, meshstop, num_in_mesh):
+        #Produces the multiplicative life curve of the diagram
+        #@param meshstart: The lowest value at which to begin the curve
+        #@param meshstop: the highest value at which to stop the curve
+        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        curve = self.multilifecurve(meshstart,meshstop,num_in_mesh)/self.totalmultilife()
+        return curve
     def lifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         #Produces the life entropy curve of the diagram
         #@param meshstart: The lowest value at which to begin the curve
         #@param meshstop: the highest value at which to stop the curve
         #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        Birth = self.Birth
-        Death = self.Death
-        if self.infinitedeath is None:
-            if self.globalmaxdeath is None:
-                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
-            else:
-                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
-        else:
-            if self.globalmaxdeath is None:
-                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
-            else:
-                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath]+2 + self.globalmaxdeath
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = -(Death - Birth)/np.sum(Death -Birth)*np.log((Death - Birth)/np.sum(Death -Birth))
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
+        tmp = self.stabilizedlifecurve(meshstart,meshstop,num_in_mesh)
+        curve = -1*tmp*np.log(tmp)
         return curve
     def multilifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         #Produces the multiplicative life entropy curve of the diagram
         #@param meshstart: The lowest value at which to begin the curve
         #@param meshstop: the highest value at which to stop the curve
         #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        Birth = self.Birth
-        Death = self.Death
-        if self.infinitedeath is None:
-            if self.globalmaxdeath is None:
-                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
-            else:
-                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
-        else:
-            if self.globalmaxdeath is None:
-                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
-            else:
-                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = -(Death/Birth)/np.sum(Death/Birth)*np.log((Death /Birth)/np.sum(Death /Birth))
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
+        tmp = self.stabilizedmidlifecurve(meshstart,meshstop,num_in_mesh)
+        curve = -1*tmp*np.log(tmp)
         return curve
     def midlifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         #Produces the midlife entropy curve of the diagram
         #@param meshstart: The lowest value at which to begin the curve
         #@param meshstop: the highest value at which to stop the curve
         #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        Birth = self.Birth
-        Death = self.Death
-        if self.infinitedeath is None:
-            if self.globalmaxdeath is None:
-                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
-            else:
-                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
-        else:
-            if self.globalmaxdeath is None:
-                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
-            else:
-                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = -(Death + Birth)/np.sum(Death + Birth)*np.log((Death + Birth)/np.sum(Death -Birth))
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
+        tmp = self.stabilizedmultilifecurve(meshstart,meshstop,num_in_mesh)
+        curve = -1*tmp*np.log(tmp)
         return curve
     def custom_curve_at_t(Dgm,fun,stat,t):
         Birth = Dgm.Birth
@@ -303,3 +253,46 @@ class Diagram:
         for t in x:
             L = np.append(L, custom_curve_at_t(Dgm, fun, stat, t))
         return L
+    def totallife(self):
+        Birth = self.Birth
+        Death = self.Death
+        if self.infinitedeath is None:
+            if self.globalmaxdeath is None:
+                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
+            else:
+                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
+        else:
+            if self.globalmaxdeath is None:
+                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
+            else:
+                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
+        return np.sum(Death-Birth)
+    def totalmidlife(self):
+        Birth = self.Birth
+        Death = self.Death
+        if self.infinitedeath is None:
+            if self.globalmaxdeath is None:
+                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
+            else:
+                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
+        else:
+            if self.globalmaxdeath is None:
+                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
+            else:
+                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
+        return np.sum(Death+Birth)/2
+    def totalmultilife(self):
+        Birth = self.Birth
+        Death = self.Death
+        if self.infinitedeath is None:
+            if self.globalmaxdeath is None:
+                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
+            else:
+                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
+        else:
+            if self.globalmaxdeath is None:
+                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
+            else:
+                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
+        return np.sum(Death/Birth)
+    
