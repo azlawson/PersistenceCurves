@@ -56,7 +56,7 @@ The code below returns exactly the Betti curve.
 ```python
 def fun(b,d,t):
     return 1
-D.customcurve(fun = fun, statistic = np.sum, meshstart=0, meshstop=255, num_in_mesh=256)
+D.custom_curve(fun = fun, statistic = np.sum, meshstart=0, meshstop=255, num_in_mesh=256)
 ```
 
 The code below returns the 0th persistent landscape
@@ -64,5 +64,5 @@ The code below returns the 0th persistent landscape
 ```python
 def fun(b,d,t):
     return np.min(t-b, d-t, 0)
-D.customcurve(fun=fun, statistic=np.max, meshstart=0, meshstop=255, num_in_mesh=256)
+D.custom_curve(fun=fun, statistic=np.max, meshstart=0, meshstop=255, num_in_mesh=256)
 ```
