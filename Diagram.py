@@ -228,30 +228,30 @@ class Diagram:
         tmp = self.stabilizedmultilifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
         return curve
-    def custom_curve_at_t(Dgm,fun,stat,t):
-        Birth = Dgm.Birth
-        Death = Dgm.Death
-        if Dgm.infinitedeath == -1:
-            if Dgm.globalmaxdeath is None:
-                Death[Death<0] =Death[Death<0] + np.max(Dgm.Death) + 2
+    def custom_curve_at_t(self,fun,stat,t):
+        Birth = self.Birth
+        Death = self.Death
+        if self.infinitedeath == -1:
+            if self.globalmaxdeath is None:
+                Death[Death<0] =Death[Death<0] + np.max(self.Death) + 2
             else:
-                Death[Death<0] = Death[Death<0] +2 + Dgm.globalmaxdeath
+                Death[Death<0] = Death[Death<0] +2 + self.globalmaxdeath
         else:
-            if Dgm.globalmaxdeath is None:
-                Death[Death==Dgm.infinitedeath] =Death[Death==Dgm.infinitedeath] + np.max(Dgm.Death) + 2
+            if self.globalmaxdeath is None:
+                Death[Death==self.infinitedeath] =Death[Death==self.infinitedeath] + np.max(self.Death) + 2
             else:
-                Death[Death==Dgm.infinitedeath] = Death[Death==Dgm.infinitedeath] +2 + Dgm.globalmaxdeath
-        tmpBirth= Birth[(t>=Dgm.Birth) &(t<Dgm.Death)]
-        tmpDeath =Death[(t>=Dgm.Birth) &(t<Dgm.Death)]
+                Death[Death==self.infinitedeath] = Death[Death==self.infinitedeath] +2 + self.globalmaxdeath
+        tmpBirth= Birth[(t>=self.Birth) &(t<self.Death)]
+        tmpDeath =Death[(t>=self.Birth) &(t<self.Death)]
         values = []
         for i in range(tmpBirth.shape[0]):
-            values.append(fun(Dgm,tmpBirth[i], tmpDeath[i], t))
+            values.append(fun(self,tmpBirth[i], tmpDeath[i], t))
         return stat(values)
-    def custom_curve(Dgm,fun, stat, meshstart, meshstop, numberinmesh):
+    def custom_curve(self,fun, stat, meshstart, meshstop, numberinmesh):
         L = np.array([])
         x = np.linspace(meshstart, meshstop, numberinmesh)
         for t in x:
-            L = np.append(L, custom_curve_at_t(Dgm, fun, stat, t))
+            L = np.append(L, self.custom_curve_at_t(fun, stat, t))
         return L
     def totallife(self):
         Birth = self.Birth
