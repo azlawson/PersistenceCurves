@@ -1,6 +1,6 @@
+# -*- coding: utf-8 -*-
 """
 Created on Mon Nov  5 11:26:12 2018
-
 @author: Austin Lawson (azlawson@uncg.edu)
 """
 
@@ -105,14 +105,13 @@ class Diagram:
             L = np.append(L, landscape_at_t(Birth,Death,t, k))
         return L
     def landscape(self, k, meshstart, meshstop, num_in_mesh):
-        Birth = self.Birth.reshape([715,1])
-        Death = self.Death.reshape([715,1])
-        D = Dgm1[images.image.iloc[0]]
-        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,715])).T
+        Birth = self.Birth.reshape([self.shape[0],1])
+        Death = self.Death.reshape([self.shape[0],1])
+        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,self.shape[0]])).T
         tmpB = T-Birth
         tmpD = Death-T
         tri=np.min(np.stack([tmpB,tmpD]),axis=0)
-        land=np.sort(tri,axis=0)[D.shape[0]-k-1]
+        land=np.sort(tri,axis=0)[self.shape[0]-k-1]
         land[land<0]=0
         
     def lifecurve(self, meshstart, meshstop, num_in_mesh):
@@ -253,7 +252,8 @@ class Diagram:
         """
         tmp = self.stabilizedlifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
-        return curve.fillna(0)
+        curve[np.isnan(curve)]=0
+        return curve
     def multilifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the multiplicative life entropy curve of the diagram
@@ -268,8 +268,8 @@ class Diagram:
         num_in_mesh dimensional vector of multiplicative life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.stabilizedmidlifecurve(meshstart,meshstop,num_in_mesh)
-        curve = -1*tmp*np.log(tmp)
-        return curve.fillna(0)
+        curve[np.isnan(curve)]=0
+        return curve
     def midlifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the midlife entropy curve of the diagram
@@ -284,8 +284,8 @@ class Diagram:
         num_in_mesh dimensional vector of midlife entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.stabilizedmultilifecurve(meshstart,meshstop,num_in_mesh)
-        curve = -1*tmp*np.log(tmp)
-        return curve.fillna(0)
+        curve[np.isnan(curve)]=0
+        return curve
     def custom_curve_at_t(self,fun,stat,t):
         Birth = self.Birth
         Death = self.Death
