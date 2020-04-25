@@ -104,9 +104,9 @@ class Diagram:
         tmpB = T-Birth
         tmpD = Death-T
         tri=np.min(np.stack([tmpB,tmpD]),axis=0)
-        land=np.sort(tri,axis=0)[D.shape[0]-k-1]
+        land=np.sort(tri,axis=0)[self.shape[0]-k-1]
         land[land<0]=0
-        
+        return land
     def lifecurve2(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the lifespan curve of the diagram
