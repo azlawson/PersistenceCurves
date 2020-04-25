@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Mon Nov  5 11:26:12 2018
 
@@ -81,7 +80,7 @@ class Diagram:
         curve = tmp.sum(axis = 0)
         return curve
 
-    def landscape(self, k, meshstart, meshstop, numberinmesh):
+    def landscape2(self, k, meshstart, meshstop, numberinmesh):
         """
         Produces k-th persistence landscape (http://www.jmlr.org/papers/volume16/bubenik15a/bubenik15a.pdf) of the diagram
         
@@ -105,6 +104,17 @@ class Diagram:
         for t in x:
             L = np.append(L, landscape_at_t(Birth,Death,t, k))
         return L
+    def landscape(self, k, meshstart, meshstop, num_in_mesh):
+        Birth = self.Birth.reshape([715,1])
+        Death = self.Death.reshape([715,1])
+        D = Dgm1[images.image.iloc[0]]
+        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,715])).T
+        tmpB = T-Birth
+        tmpD = Death-T
+        tri=np.min(np.stack([tmpB,tmpD]),axis=0)
+        land=np.sort(tri,axis=0)[D.shape[0]-k-1]
+        land[land<0]=0
+        
     def lifecurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the lifespan curve of the diagram
@@ -243,7 +253,7 @@ class Diagram:
         """
         tmp = self.stabilizedlifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
-        return curve
+        return curve.fillna(0)
     def multilifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the multiplicative life entropy curve of the diagram
@@ -259,7 +269,7 @@ class Diagram:
         """
         tmp = self.stabilizedmidlifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
-        return curve
+        return curve.fillna(0)
     def midlifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the midlife entropy curve of the diagram
@@ -275,7 +285,7 @@ class Diagram:
         """
         tmp = self.stabilizedmultilifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
-        return curve
+        return curve.fillna(0)
     def custom_curve_at_t(self,fun,stat,t):
         Birth = self.Birth
         Death = self.Death
