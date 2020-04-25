@@ -98,10 +98,10 @@ class Diagram:
             L = np.append(L, landscape_at_t(Birth,Death,t, k))
         return L
     def landscape(self, k, meshstart, meshstop, num_in_mesh):
-        Birth = self.Birth.reshape([715,1])
-        Death = self.Death.reshape([715,1])
+        Birth = self.Birth.reshape([self.shape[0],1])
+        Death = self.Death.reshape([self.shape[0],1])
         D = Dgm1[images.image.iloc[0]]
-        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,715])).T
+        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,self.shape[0]])).T
         tmpB = T-Birth
         tmpD = Death-T
         tri=np.min(np.stack([tmpB,tmpD]),axis=0)
