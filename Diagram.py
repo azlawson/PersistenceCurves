@@ -100,8 +100,7 @@ class Diagram:
     def landscape(self, k, meshstart, meshstop, num_in_mesh):
         Birth = self.Birth.reshape([self.shape[0],1])
         Death = self.Death.reshape([self.shape[0],1])
-        D = Dgm1[images.image.iloc[0]]
-        T = np.matmul(np.linspace(meshstart, meshstop, num_in_mesh).reshape([num_in_mesh,1]),np.ones([1,self.shape[0]])).T
+        T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
         tmpB = T-Birth
         tmpD = Death-T
         tri=np.min(np.stack([tmpB,tmpD]),axis=0)
