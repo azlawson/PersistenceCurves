@@ -5,10 +5,9 @@ Created on Mon Nov  5 11:26:12 2018
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy import stats
 class Diagram:
-    def __init__(self, Dgm, globalmaxdeath = None, infinitedeath=-1, inf_policy="keep"):
+    def __init__(self, Dgm, globalmaxdeath = None, infinitedeath=float("inf"), inf_policy="keep"):
         """
         Transforms a diagram (n by 2 NumPy array or Pandas DataFrame) into the Diagram class.
         
@@ -17,7 +16,7 @@ class Diagram:
         
         globalmaxdeath: The maximum possible death value for the persistence process, used to replace infinite death value.
         
-        infinitedeath: The value that represents an infinite death value, e.g. for Perseus that value is -1, which is default for this package
+        infinitedeath: The value that represents an infinite death value, e.g. for Perseus that value is -1, and for gudhi the value is float("inf") which is default for this package
         
         inf_policy: 'keep' or 'remove'. If 'keep', infinite death values will be replaced globalmaxdeath value if set otherwise the max death value of the diagram
         """
@@ -33,8 +32,8 @@ class Diagram:
                 self.Death[self.Death==self.infinitedeath] =np.max(self.Death[self.Death!=self.infinitedeath])
             else:
                 self.Death[self.Death==self.infinitedeath] = self.globalmaxdeath
-        self.shape = Dgm.shape
         self.diagram = np.stack([self.Birth, self.Death], axis = 1)
+        self.shape = self.diagram.shape
 
     def plot(self, xlim = None,ylim=None, ptsize = 3):
         """
@@ -73,7 +72,7 @@ class Diagram:
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
         return curve
 
-    def landscape2(self, k, meshstart, meshstop, numberinmesh):
+    def landscape(self, k, meshstart, meshstop, num_in_mesh):
         """
         Produces k-th persistence landscape (http://www.jmlr.org/papers/volume16/bubenik15a/bubenik15a.pdf) of the diagram
         
@@ -86,18 +85,6 @@ class Diagram:
         Output:
         Outputs the k-th persistence landscape values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        Birth = self.Birth
-        Death = self.Death
-        def landscape_at_t(Birth,Death, t, k):
-            tmp= np.stack([Birth, Death], axis=1)[(t>=Birth) &(t<Death)]
-            tmp1 = np.stack([t-tmp[:,0], tmp[:,1]-t], axis = 1)
-            return np.sort(np.concatenate((np.min(tmp1, axis = 1),np.zeros(k+1))))[::-1][k]
-        L = np.array([])
-        x = np.linspace(meshstart, meshstop, numberinmesh)
-        for t in x:
-            L = np.append(L, landscape_at_t(Birth,Death,t, k))
-        return L
-    def landscape(self, k, meshstart, meshstop, num_in_mesh):
         Birth = self.Birth.reshape([self.shape[0],1])
         Death = self.Death.reshape([self.shape[0],1])
         T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
@@ -107,32 +94,6 @@ class Diagram:
         land=np.sort(tri,axis=0)[self.shape[0]-k-1]
         land[land<0]=0
         return land
-    def lifecurve2(self, meshstart, meshstop, num_in_mesh):
-        """
-        Produces the lifespan curve of the diagram
-        
-        Parameters:
-        
-        meshstart: The lowest value at which to begin the curve
-        meshstop: the highest value at which to stop the curve
-        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        
-        Output:
-        num_in_mesh dimensional vector of lifespan curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
-        """
-        Birth = self.Birth
-        Death = self.Death
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        #centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = Death - Birth
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
-        return curve
     def lifecurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the lifespan curve of the diagram
@@ -153,32 +114,6 @@ class Diagram:
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
         return curve
     
-    def midlifecurve2(self, meshstart, meshstop, num_in_mesh):
-        """
-        Produces the midlife curve of the diagram
-        
-        Parameters:
-        
-        meshstart: The lowest value at which to begin the curve
-        meshstop: the highest value at which to stop the curve
-        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        
-        Output:
-        num_in_mesh dimensional vector of midlife curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
-        """
-        Birth = self.Birth
-        Death = self.Death
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = 0.5*(Birth+Death)
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
-        return curve/2
     def midlifecurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the midlife curve of the diagram
@@ -197,32 +132,6 @@ class Diagram:
         FUN = 0.5*(Birth+Death)
         T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
-        return curve
-    def multilifecurve2(self, meshstart, meshstop, num_in_mesh):
-        """
-        Produces the multiplicative life curve of the diagram
-        
-        Parameters:
-        
-        meshstart: The lowest value at which to begin the curve
-        meshstop: the highest value at which to stop the curve
-        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
-        
-        Output:
-        num_in_mesh dimensional vector of multiplicative life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
-        """
-        Birth = self.Birth
-        Death = self.Death
-        bins = np.linspace(meshstart, meshstop, num_in_mesh)
-        centers = (bins[1:]+bins[:-1])/2
-        tmp = np.zeros([self.shape[0], num_in_mesh])
-        FUN = Death/Birth
-        for i in range(self.shape[0]):
-            x = np.array([Birth[i],Death[i]])
-            res =np.where(np.digitize(bins, x, right=False)==1)[0]
-            if len(res) !=0:
-                tmp[i, res[0]:res[len(res)-1]+1] = FUN[i]
-        curve = tmp.sum(axis = 0)
         return curve
     def multilifecurve(self, meshstart, meshstop, num_in_mesh):
         """
