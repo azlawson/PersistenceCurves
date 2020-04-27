@@ -4,7 +4,7 @@ with open("README.txt", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="PersistenceCurves",
+    name="persistencecurves",
     version="0.0.1",
     author="Austin Lawson",
     author_email="azlawson@uncg.edu",
@@ -12,6 +12,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
+    url="https://github.com/azlawson/PersistenceCurves"
+    install_requires = ["numpy", "scipy"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
