@@ -16,17 +16,17 @@ D = pc.Diagram(Dgm =Dgm, globalmaxdeath = None, infinitedeath=None, inf_policy="
 ### Global Values
 This class has various global variables such as 
 
-<pre>diagram</pre> = Dgm
+<diagram> = Dgm
 
-<pre>Birth} = All the Birth values of Dgm
+<Birth> = All the Birth values of Dgm
 
-<pre>Death</pre> = All the Death values of Dgm
+<Death> = All the Death values of Dgm
 
-<pre>globalmaxdeath</pre> = If one is considering multiple samples of a space where a largest possible death value, that value should be input here. For example, images have a global max death of 255.
+<globalmaxdeath> = If one is considering multiple samples of a space where a largest possible death value, that value should be input here. For example, images have a global max death of 255.
 
-<pre>infinitedeath</pre> = The value signifying an infinite death. For most softwares, this value is -1. Thus if left unset, any negative death value is assumed to be infinite.
+<infinitedeath> = The value signifying an infinite death. For most softwares, this value is -1. Thus if left unset, any negative death value is assumed to be infinite.
 
-<pre>shape</pre> = Dgm.shape.
+<shape> = a tuple (n,2) where n is the number of points in the diagram
 
  ### The Built-in Curves
  The bulk of this package is the curve calculation. The Diagram class comes with some pre-set Persistence Curves as well as the option for a custom curve. All of the preset curves, except landscape, have as inputs **meshstart**, **meshstop**, and **num_in_mesh**. These numbers follow the same concept as NumPy's linspace where **meshstart** is the leftmost endpoint, **meshstop** is the right endpoint and **num_in_mesh** is the number of points in the mesh. The method returns a vector of length **num_in_mesh**. For a Diagram arising from an image we can (and do) use:
@@ -42,7 +42,7 @@ D.landscape(k=1,meshstart=0,meshstop=255,num_in_mesh=256)
 ```
 
 ### The Custom Curve
-A Persistence Curve has two main components. An inner function **fun** and a **statistic** (recall that a statistic is just a function of a multi-set). As such the <pre>customcurve</pre> method requires an input of both. 
+A Persistence Curve has two main components. An inner function **fun** and a **statistic** (recall that a statistic is just a function of a multi-set). As such the <customcurve> method requires an input of both. 
 
 The inner function **fun** should be a function of three variables b,d,and t that returns a single value. The statistic can be any function applicable to an entire array. Some examples follow:
 
@@ -54,10 +54,3 @@ def fun(b,d,t):
 D.custom_curve(fun = fun, statistic = np.sum, meshstart=0, meshstop=255, num_in_mesh=256)
 ```
 
-The code below returns the 0th persistent landscape
-
-```python
-def fun(b,d,t):
-    return np.min(t-b, d-t, 0)
-D.custom_curve(fun=fun, statistic=np.max, meshstart=0, meshstop=255, num_in_mesh=256)
-```
