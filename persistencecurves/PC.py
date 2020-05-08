@@ -6,6 +6,7 @@ Created on Mon Nov  5 11:26:12 2018
 
 import numpy as np
 from scipy import stats
+import matplotlib.pyplot as plt
 class Diagram:
     def __init__(self, Dgm, globalmaxdeath = None, infinitedeath=float("inf"), inf_policy="keep"):
         """
@@ -65,9 +66,9 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of Betti curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        Birth = self.Birth
-        Death = self.Death
-        FUN = np.ones(self.shape[0])
+        Birth = self.Birth.reshape([self.shape[0],1])
+        Death = self.Death.reshape([self.shape[0],1])
+        FUN = np.ones([self.shape[0],1])
         T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
         return curve
@@ -149,12 +150,13 @@ class Diagram:
         Birth = self.Birth.reshape([self.shape[0],1])
         Death = self.Death.reshape([self.shape[0],1])
         FUN = Death/Birth
+        FUN[FUN == float("inf")] = Death.max() 
         T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
         return curve
-    def stabilizedlifecurve(self, meshstart, meshstop, num_in_mesh):
+    def normalizedBetticurve(self, meshstart, meshstop, num_in_mesh):
         """
-        Produces the stabilized(normalized) life curve of the diagram
+        Produces the normalized(normalized) Betti curve of the diagram
         
         Parameters:
         
@@ -163,13 +165,28 @@ class Diagram:
         num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
         
         Output:
-        num_in_mesh dimensional vector of stabilized(normalized) life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        num_in_mesh dimensional vector of normalized(normalized) life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        """
+        curve = self.Betticurve(meshstart,meshstop,num_in_mesh)/self.totallife()
+        return curve
+    def normalizedlifecurve(self, meshstart, meshstop, num_in_mesh):
+        """
+        Produces the normalized(normalized) life curve of the diagram
+        
+        Parameters:
+        
+        meshstart: The lowest value at which to begin the curve
+        meshstop: the highest value at which to stop the curve
+        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        
+        Output:
+        num_in_mesh dimensional vector of normalized(normalized) life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         curve = self.lifecurve(meshstart,meshstop,num_in_mesh)/self.totallife()
         return curve
-    def stabilizedmidlifecurve(self, meshstart, meshstop, num_in_mesh):
+    def normalizedmidlifecurve(self, meshstart, meshstop, num_in_mesh):
         """
-        Produces the stabilized(normalized) midlife curve of the diagram
+        Produces the normalized(normalized) midlife curve of the diagram
         
         Parameters:
         
@@ -178,13 +195,13 @@ class Diagram:
         num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
         
         Output:
-        num_in_mesh dimensional vector of stabilized(normalized) midlife curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        num_in_mesh dimensional vector of normalized(normalized) midlife curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         curve = self.midlifecurve(meshstart,meshstop,num_in_mesh)/self.totalmidlife()
         return curve
-    def stabilizedmultilifecurve(self, meshstart, meshstop, num_in_mesh):
+    def normalizedmultilifecurve(self, meshstart, meshstop, num_in_mesh):
         """
-        Produces the stabilized(normalized) multiplicative life curve of the diagram
+        Produces the normalized(normalized) multiplicative life curve of the diagram
         
         Parameters:
         
@@ -193,9 +210,26 @@ class Diagram:
         num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
         
         Output:
-        num_in_mesh dimensional vector of stabilized(normalized) multiplicative life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        num_in_mesh dimensional vector of normalized(normalized) multiplicative life curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         curve = self.multilifecurve(meshstart,meshstop,num_in_mesh)/self.totalmultilife()
+        return curve
+    def Bettientropycurve(self, meshstart, meshstop, num_in_mesh):
+        """
+        Produces the life entropy curve (aka entropy summary function; https://arxiv.org/abs/1803.08304) of the diagram
+        
+        Parameters:
+        
+        meshstart: The lowest value at which to begin the curve
+        meshstop: the highest value at which to stop the curve
+        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        
+        Output:
+        num_in_mesh dimensional vector of life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        """
+        tmp = self.normalizedBetticurve(meshstart,meshstop,num_in_mesh)
+        curve = -1*tmp*np.log(tmp)
+        curve[np.isnan(curve)] = 0
         return curve
     def lifeentropycurve(self, meshstart, meshstop, num_in_mesh):
         """
@@ -210,7 +244,7 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        tmp = self.stabilizedlifecurve(meshstart,meshstop,num_in_mesh)
+        tmp = self.normalizedlifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -227,7 +261,7 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of multiplicative life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        tmp = self.stabilizedmidlifecurve(meshstart,meshstop,num_in_mesh)
+        tmp = self.normalizedmidlifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -244,7 +278,7 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of midlife entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        tmp = self.stabilizedmultilifecurve(meshstart,meshstop,num_in_mesh)
+        tmp = self.normalizedmultilifecurve(meshstart,meshstop,num_in_mesh)
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -280,10 +314,14 @@ class Diagram:
     def totalmultilife(self):
         """
         returns the sum of multiplicative lifespans in the diagram
+        will replace division by 0 with max death
         """
         Birth = self.Birth
         Death = self.Death
-        return np.sum(Death/Birth)
+        FUN = Death/Birth
+        FUN[FUN==float("inf")]=Death.max()
+        out = np.sum(FUN)
+        return out
     def entropy(self):
         """
         returns the persistent entropy (https://arxiv.org/abs/1512.07613) of the diagram
