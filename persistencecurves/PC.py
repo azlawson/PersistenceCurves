@@ -86,13 +86,13 @@ class Diagram:
         Output:
         Outputs the k-th persistence landscape values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        Birth = self.Birth.reshape([self.shape[0],1])
-        Death = self.Death.reshape([self.shape[0],1])
-        T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
-        tmpB = T-Birth
-        tmpD = Death-T
-        tri=np.min(np.stack([tmpB,tmpD]),axis=0)
-        land=np.sort(tri,axis=0)[self.shape[0]-k-1]
+        Birth = self.Birth.reshape([self.shape[0],1]).astype(np.float32)
+        Death = self.Death.reshape([self.shape[0],1]).astype(np.float32)
+        T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh]).astype(np.float32)
+        tmpB = (T-Birth).astype(np.float32)
+        tmpD = (Death-T).astype(np.float32)
+        tri=np.minimum(tmpB,tmpD).astype(np.float32)
+        land=np.sort(tri,axis=0,)[self.shape[0]-k-1]
         land[land<0]=0
         return land
     def lifecurve(self, meshstart, meshstop, num_in_mesh):
@@ -114,7 +114,44 @@ class Diagram:
         T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
         curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
         return curve
-    
+    def deathcurve(self, meshstart, meshstop, num_in_mesh):
+        """
+        Produces the death curve of the diagram
+        
+        Parameters:
+        
+        meshstart: The lowest value at which to begin the curve
+        meshstop: the highest value at which to stop the curve
+        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        
+        Output:
+        num_in_mesh dimensional vector of lifespan curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        """
+        Birth = self.Birth.reshape([self.shape[0],1])
+        Death = self.Death.reshape([self.shape[0],1])
+        FUN = Death
+        T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
+        curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
+        return curve
+    def birthcurve(self, meshstart, meshstop, num_in_mesh):
+        """
+        Produces the birth curve of the diagram
+        
+        Parameters:
+        
+        meshstart: The lowest value at which to begin the curve
+        meshstop: the highest value at which to stop the curve
+        num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        
+        Output:
+        num_in_mesh dimensional vector of lifespan curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
+        """
+        Birth = self.Birth.reshape([self.shape[0],1])
+        Death = self.Death.reshape([self.shape[0],1])
+        FUN = Birth
+        T = np.linspace(meshstart,meshstop,num_in_mesh)*np.ones([self.shape[0],num_in_mesh])
+        curve=np.where(((T>=Birth) & (T<Death)),FUN,0).sum(axis=0)
+        return curve
     def midlifecurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the midlife curve of the diagram
