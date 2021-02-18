@@ -265,6 +265,7 @@ class Diagram:
         num_in_mesh dimensional vector of life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.normalizedBetticurve(meshstart,meshstop,num_in_mesh)
+        tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -282,6 +283,7 @@ class Diagram:
         num_in_mesh dimensional vector of life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.normalizedlifecurve(meshstart,meshstop,num_in_mesh)
+        tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -299,6 +301,7 @@ class Diagram:
         num_in_mesh dimensional vector of multiplicative life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.normalizedmidlifecurve(meshstart,meshstop,num_in_mesh)
+        tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -316,6 +319,7 @@ class Diagram:
         num_in_mesh dimensional vector of midlife entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
         tmp = self.normalizedmultilifecurve(meshstart,meshstop,num_in_mesh)
+        tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
         return curve
@@ -405,11 +409,9 @@ class Diagram:
         Birth = self.Birth
         Death = self.Death
         T = np.linspace(meshstart, meshstop, num_in_mesh)
-        Life = np.ones(Birth.shape[0])/Birth.shape[0]
         B = np.matmul(np.array(Birth).reshape(-1,1),np.ones([1,num_in_mesh]))
         De = np.matmul(np.array(Death).reshape(-1,1),np.ones([1,num_in_mesh]))
-        L = np.matmul(np.array(Life).reshape(-1,1),np.ones([1,num_in_mesh]))
-        return np.sum(L*stats.norm.cdf((T-B)/spread)*(1-stats.norm.cdf((T-De)/spread)), axis=0)
+        return np.sum(stats.norm.cdf((T-B)/spread)*(1-stats.norm.cdf((T-De)/spread)), axis=0)
     def gaussian_midlife(self, meshstart, meshstop, num_in_mesh,spread=1):
         #Produces the gaussian life curve of the diagram
         #@param meshstart: The lowest value at which to begin the curve
