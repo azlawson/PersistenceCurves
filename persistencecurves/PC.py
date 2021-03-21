@@ -8,7 +8,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 class Diagram:
-    def __init__(self, Dgm, globalmaxdeath = None, infinitedeath=float("inf"), inf_policy="keep"):
+    def __init__(self, Dgm, globalmaxdeath = None, infinitedeath=float("inf"), inf_policy="remove"):
         """
         Transforms a diagram (n by 2 NumPy array or Pandas DataFrame) into the Diagram class.
         
@@ -28,7 +28,7 @@ class Diagram:
         if inf_policy=="remove":
             self.Birth = self.Birth[self.Death != self.infinitedeath]
             self.Death = self.Death[self.Death != self.infinitedeath]
-        elif inf_policy=="keep":
+        elif inf_policy=="replace":
             if self.globalmaxdeath is None:
                 self.Death[self.Death==self.infinitedeath] =np.max(self.Death[self.Death!=self.infinitedeath])
             else:
@@ -46,13 +46,8 @@ class Diagram:
             (self.Birth.min(),self.Death.max())
         Birth = self.Birth
         Death = self.Death
-        if self.globalmaxdeath is None:
-            plt.scatter(Birth, Death, s=ptsize)
-            plt.plot(xlim, ylim, c="green")
-        else:
-            plt.scatter(Birth, finDeath, s=ptsize)
-            plt.scatter(Birth[Death==globalmaxdeath], Death[Death==globalmaxdeath], marker = "D", c='red')
-            plt.plot(xlim,ylim, c="green")
+        plt.scatter(Birth, Death, s=ptsize)
+        plt.plot(xlim, ylim, c="green")
     def Betticurve(self, meshstart, meshstop, num_in_mesh):
         """
         Produces the Betti curve of the diagram
@@ -300,7 +295,7 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of multiplicative life entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        tmp = self.normalizedmidlifecurve(meshstart,meshstop,num_in_mesh)
+        tmp = self.normalizedmultilifecurve(meshstart,meshstop,num_in_mesh)
         tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
@@ -318,7 +313,7 @@ class Diagram:
         Output:
         num_in_mesh dimensional vector of midlife entropy curve values computed at num_in_mesh evenly spaced points starting at meshstart and ending at meshstop
         """
-        tmp = self.normalizedmultilifecurve(meshstart,meshstop,num_in_mesh)
+        tmp = self.normalizedmidlifecurve(meshstart,meshstop,num_in_mesh)
         tmp[tmp==0] = 1
         curve = -1*tmp*np.log(tmp)
         curve[np.isnan(curve)] = 0
@@ -389,10 +384,10 @@ class Diagram:
         L = np.matmul(np.array(Life).reshape(-1,1),np.ones([1,num_in_mesh]))
         return np.sum(L*stats.norm.cdf((T-B)/spread)*(1-stats.norm.cdf((T-De)/spread)), axis=0)
     def gaussian_life_derivative(self, meshstart, meshstop, num_in_mesh, spread = 1):
-        #Produces the gaussian life curve of the diagram
-        #@param meshstart: The lowest value at which to begin the curve
-        #@param meshstop: the highest value at which to stop the curve
-        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        '''Produces the gaussian life curve of the diagram
+        @param meshstart: The lowest value at which to begin the curve
+        @param meshstop: the highest value at which to stop the curve
+        @param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values'''
         Birth = self.Birth
         Death = self.Death
         T = np.linspace(meshstart, meshstop, num_in_mesh)
@@ -402,10 +397,10 @@ class Diagram:
         L = np.matmul(np.array(Life).reshape(-1,1),np.ones([1,num_in_mesh]))
         return np.sum(L*(stats.norm.pdf((T-B)/spread) - stats.norm.pdf((T-B)/spread)*(stats.norm.cdf((T-De)/spread))-stats.norm.pdf((T-De)/spread)*(stats.norm.cdf((T-B)/spread))), axis=0)
     def gaussian_Betti(self, meshstart, meshstop, num_in_mesh,spread=1):
-        #Produces the gaussian life curve of the diagram
-        #@param meshstart: The lowest value at which to begin the curve
-        #@param meshstop: the highest value at which to stop the curve
-        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        '''Produces the gaussian life curve of the diagram
+        @param meshstart: The lowest value at which to begin the curve
+        @param meshstop: the highest value at which to stop the curve
+        @param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values'''
         Birth = self.Birth
         Death = self.Death
         T = np.linspace(meshstart, meshstop, num_in_mesh)
@@ -413,10 +408,10 @@ class Diagram:
         De = np.matmul(np.array(Death).reshape(-1,1),np.ones([1,num_in_mesh]))
         return np.sum(stats.norm.cdf((T-B)/spread)*(1-stats.norm.cdf((T-De)/spread)), axis=0)
     def gaussian_midlife(self, meshstart, meshstop, num_in_mesh,spread=1):
-        #Produces the gaussian life curve of the diagram
-        #@param meshstart: The lowest value at which to begin the curve
-        #@param meshstop: the highest value at which to stop the curve
-        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        '''Produces the gaussian life curve of the diagram
+        @param meshstart: The lowest value at which to begin the curve
+        @param meshstop: the highest value at which to stop the curve
+        @param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values'''
         Birth = self.Birth
         Death = self.Death
         T = np.linspace(meshstart, meshstop, num_in_mesh)
@@ -426,10 +421,10 @@ class Diagram:
         L = np.matmul(np.array(Life).reshape(-1,1),np.ones([1,num_in_mesh]))
         return np.sum(L*stats.norm.cdf((T-B)/spread)*(1-stats.norm.cdf((T-De)/spread)), axis=0)
     def gaussian_midlife_derivative(self, meshstart, meshstop, num_in_mesh, spread = 1):
-        #Produces the gaussian life curve of the diagram
-        #@param meshstart: The lowest value at which to begin the curve
-        #@param meshstop: the highest value at which to stop the curve
-        #@param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values
+        '''Produces the gaussian life curve of the diagram
+        @param meshstart: The lowest value at which to begin the curve
+        @param meshstop: the highest value at which to stop the curve
+        @param num_in_mesh: The number of evenly spaced points between meshstart and meshstop at which to compute the curve values'''
         Birth = self.Birth
         Death = self.Death
         T = np.linspace(meshstart, meshstop, num_in_mesh)
