@@ -41,9 +41,9 @@ class Diagram:
         Produces a plot of the Diagram
         """
         if xlim == None:
-            (self.Birth.min(),self.Death.max())
+            xlim=(self.Birth.min(),self.Death.max())
         if ylim == None:
-            (self.Birth.min(),self.Death.max())
+            ylim=(self.Birth.min(),self.Death.max())
         Birth = self.Birth
         Death = self.Death
         plt.scatter(Birth, Death, s=ptsize)
