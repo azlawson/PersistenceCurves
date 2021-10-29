@@ -19,7 +19,7 @@ class Diagram:
         
         infinitedeath: The value that represents an infinite death value, e.g. for Perseus that value is -1, and for gudhi the value is float("inf") which is default for this package
         
-        inf_policy: 'keep' or 'remove'. If 'keep', infinite death values will be replaced globalmaxdeath value if set otherwise the max death value of the diagram
+        inf_policy: 'replace' or 'remove'. If 'replace', infinite death values will be replaced with globalmaxdeath value if set, otherwise the max death value of the diagram
         """
         self.globalmaxdeath = globalmaxdeath
         self.infinitedeath = infinitedeath
