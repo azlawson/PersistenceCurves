@@ -10,7 +10,7 @@ The sole class of this package is <Diagram>. This package assumes the user has a
 
 ```python
 import persistencecurves as pc
-D = pc.Diagram(Dgm =Dgm, globalmaxdeath = None, infinitedeath=None, inf_policy="keep")
+D = pc.Diagram(Dgm =Dgm, globalmaxdeath = None, infinitedeath=None, inf_policy="replace")
 ```
 
 ### Global Values
